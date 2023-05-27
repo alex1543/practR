@@ -25,14 +25,25 @@ df = fetch(res, n = 3)
 print(df)
 
 viewSelect <- function() {
-y1 <- read.table("select.html", 
-                header=TRUE, sep="\t", as.is=TRUE, 
+list_file <- read.table("select.html", 
+                sep="\t", as.is=TRUE, 
                 check.names=FALSE, comment.char="")
 
-	print(typeof(y1))
-#	print(y1)
-	v1 <- y1
-    return(v1)
+	print(typeof(list_file))
+	
+	for(line_file in list_file){
+	
+		print(line_file)
+		
+		#if (grepl("@tr", line_file, fixed = TRUE) == TRUE) {
+		
+		#}
+  
+	}
+	
+	#print(y1)
+	#v1 <- list_file
+    return(list_file)
 }
 
 
@@ -41,7 +52,7 @@ y1 <- read.table("select.html",
 # always return 'Success:' followed by the requested path
 s = servr::create_server(handler = function(req) {
 
-list(status = 200L, body = paste(viewSelect()))
+list(status = 200L, body = paste(unlist(viewSelect()), collapse=''))
 
 #list(status = 200L, body = paste("Success:", req$PATH_INFO))
 })
