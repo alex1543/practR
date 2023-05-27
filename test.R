@@ -1,10 +1,12 @@
+# Install package
+#install.packages('RMySQL', repos = "http://cran.us.r-project.org")
+#install.packages('servr', repos = "http://cran.us.r-project.org")
+
 
 myString <- "Loading..."
 print(myString)
 
-# Install package
-#install.packages('RMySQL', repos = "http://cran.us.r-project.org")
- 
+
 # Loading library
 library("RMySQL")
  
@@ -22,12 +24,26 @@ res = dbSendQuery(mysqlconn, "SELECT * FROM myarttable WHERE id>14 ORDER BY id D
 df = fetch(res, n = 3)
 print(df)
 
+viewSelect <- function() {
+y1 <- read.table("select.html", 
+                header=TRUE, sep="\t", as.is=TRUE, 
+                check.names=FALSE, comment.char="")
 
-#install.packages('servr', repos = "http://cran.us.r-project.org")
+	print(typeof(y1))
+#	print(y1)
+	v1 <- y1
+    return(v1)
+}
+
+
+
 
 # always return 'Success:' followed by the requested path
 s = servr::create_server(handler = function(req) {
-list(status = 200L, body = paste("Success:", req$PATH_INFO))
+
+list(status = 200L, body = paste(viewSelect()))
+
+#list(status = 200L, body = paste("Success:", req$PATH_INFO))
 })
 s$url
 browseURL(paste0(s$url, "/hello"))
