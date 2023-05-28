@@ -52,7 +52,7 @@ GetHTML <- function() {
 	for(line_file in list_file){
 	
 		#if ((!str_contains(line_file, "@tr")) && (!str_contains(line_file, "@ver"))) {
-		if ((!grepl(line_file, "@tr")) && (!grepl(line_file, "@ver"))) {
+		if ((grep("@tr", line_file)) && (grep("@ver", line_file))) {
 			list_out = c(list_out, line_file)
 		}
 		if (str_contains(line_file, "@tr")) {
