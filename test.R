@@ -1,7 +1,6 @@
 # Install package
 #install.packages('RMySQL', repos = "http://cran.us.r-project.org")
 #install.packages('servr', repos = "http://cran.us.r-project.org")
-#install.packages('sjmisc', repos = "http://cran.us.r-project.org")
 
 myString <- "Loading..."
 print(myString)
@@ -9,24 +8,36 @@ print(myString)
 
 # Loading library
 library("RMySQL")
-library("sjmisc")
 
 # Создание подключения ...
 mysqlconn = dbConnect(MySQL(), user = 'root', password = '', dbname = 'test', host = 'localhost', port = 3306)
 
 # формирование строк таблицы ...
 ViewSelect <- function() {
-	res = dbSendQuery(mysqlconn, "SELECT * FROM myarttable WHERE id>14 ORDER BY id DESC")
-	 
-	df <- dbFetch(res)
-	#print(df)
 	s_out <- list()
+	
+	# заголовок таблицы.
+	res = dbSendQuery(mysqlconn, "SELECT COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = 'myarttable' AND TABLE_SCHEMA = 'test'")
+	df <- dbFetch(res)
+
 	for(sRow in df){
 		s_out = c(s_out, "<tr>")
-		for(sCol in sRow){
-			s_out = c(s_out, paste("<td>", sCol, "</td>"))
-			print(sCol)
-		}
+		s_out = c(s_out, paste("<td>", sRow, "</td>"))
+		s_out = c(s_out, "</tr>")
+	}
+
+	dbClearResult(res)
+	
+	# строки таблицы.
+	res = dbSendQuery(mysqlconn, "SELECT * FROM myarttable WHERE id>14 ORDER BY id DESC")
+	df <- dbFetch(res)
+	
+	# транспонирование строк и столбцов.
+	df <- as.data.frame(t(df))
+
+	for(sRow in df){
+		s_out = c(s_out, "<tr>")
+		s_out = c(s_out, paste("<td>", sRow, "</td>"))
 		s_out = c(s_out, "</tr>")
 	}
 	
@@ -44,30 +55,31 @@ ViewVer <- function() {
 
 
 GetHTML <- function() {
-	list_file <- read.table("select.html", sep="\t", as.is=TRUE, check.names=FALSE, comment.char="")
 
-	print(typeof(list_file))
 	list_out <- list()
-	
-	for(line_file in list_file){
-	
-		#if ((!str_contains(line_file, "@tr")) && (!str_contains(line_file, "@ver"))) {
-		if ((grep("@tr", line_file)) && (grep("@ver", line_file))) {
-			list_out = c(list_out, line_file)
+	# построчное чтение файла.
+	con = file("select.html", "r")
+	while ( TRUE ) {
+		line = readLines(con, n = 1)
+		if (length(line) == 0) {break}
+		#print(line)
+		if ((!grepl("@tr", line)) && (!grepl("@ver", line))) {
+			list_out = c(list_out, line)
 		}
-		if (str_contains(line_file, "@tr")) {
+		if (grepl("@tr", line)) {
 			list_out = c(list_out, ViewSelect())
 			print("This is TR.")
 		}
-		if (str_contains(line_file, "@ver")) {
+		if (grepl("@ver", line)) {
 			list_out = c(list_out, ViewVer())
 			print("This is VER.")
-		}
-	}
+		}	
 	
-    return(list_out)
+	}
+	close(con)
+	return(list_out)
 }
 
-print("Listening for connections at http://127.0.0.1:4321/ ...")
 # запуск сервера и ожидание подключений ...
+print("Listening for connections at http://127.0.0.1:4321/ ...")
 servr::create_server(handler = function(req) {list(status = 200L, body = paste(unlist(GetHTML()), collapse=''))})
